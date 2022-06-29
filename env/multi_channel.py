@@ -52,6 +52,8 @@ class FeeEnv(gym.Env):
         Since the goal is to maximize the return in long term, reward is sum of incomes from fee payments of each channel.
         Reward scale is Sat in order to control the upperbound.
 
+        ***Note:
+        We are adding the income from each payment to balance of the corresponding channel.
         """
 
 

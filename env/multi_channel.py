@@ -4,6 +4,52 @@ import numpy as np
 
 
 class FeeEnv(gym.Env):
+
+"""
+### Description
+
+This environment corresponds to the LIGHTNING NETWORK simulation. A source node is chosen and a local network
+around that node with radius 2 is created and at each time step, a certain number of transitions are being simulated.
+
+### Scales
+
+We are using the following scales for simulating the real world Lightning Network:
+
+- Fee Rate:                                        - Base Fee:
+- Transaction amounts:                             - Reward(income):
+- Capacity:                                        - Balance:
+
+### Action Space
+
+The action is a `ndarray` with shape `(2*n_channel,)` which can take values `[0,upper bound]`
+indicating the fee rate and base fee of each channel starting from source node.
+
+| dim       | action                 | dim        | action                |
+|-----------|------------------------|------------|-----------------------|
+| 0         | fee rate channel 0     | 0+n_channel| fee base channel 0    |
+| ...       |        ...             | ...        |         ...           |
+| n_channel | fee rate last channel  | 2*n_channel| fee base last channel |
+
+### Observation Space
+
+The observation is a `ndarray` with shape `(2*n_channel,)` with the values corresponding to the balance of each
+channel and also accumulative transaction amounts in each time steps.
+
+| dim       | observation            | dim        | observation                 |
+|-----------|------------------------|------------|-----------------------------|
+| 0         | balance channel 0      | 0+n_channel| sum trn amount channel 0    |
+| ...       |          ...           | ...        |            ...              |
+| n_channel | balance last channel   | 2*n_channel| sum trn amount last channel |
+
+### Rewards
+
+Since the goal is to maximize the return in long term, reward is sum of incomes from fee payments of each channel.
+Reward scale is Sat in order to control the upperbound.
+
+***Note:
+We are adding the income from each payment to balance of the corresponding channel.
+"""
+
     def __init__(self,
                  node_variables,
                  providers,
@@ -11,51 +57,6 @@ class FeeEnv(gym.Env):
                  initial_active_channels,
                  initial_network_dictionary,
                  args):
-        """
-        ### Description
-
-        This environment corresponds to the LIGHTNING NETWORK simulation. A source node is chosen and a local network
-        around that node with radius 2 is created and at each time step, a certain number of transitions are being simulated.
-
-        ### Scales
-
-        We are using the following scales for simulating the real world Lightning Network:
-
-        - Fee Rate:                                        - Base Fee:
-        - Transaction amounts:                             - Reward(income):
-        - Capacity:                                        - Balance:
-
-        ### Action Space
-
-        The action is a `ndarray` with shape `(2*n_channel,)` which can take values `[0,upper bound]`
-        indicating the fee rate and base fee of each channel starting from source node.
-
-        | dim       | action                 | dim        | action                |
-        |-----------|------------------------|------------|-----------------------|
-        | 0         | fee rate channel 0     | 0+n_channel| fee base channel 0    |
-        | ...       |        ...             | ...        |         ...           |
-        | n_channel | fee rate last channel  | 2*n_channel| fee base last channel |
-
-        ### Observation Space
-
-        The observation is a `ndarray` with shape `(2*n_channel,)` with the values corresponding to the balance of each
-        channel and also accumulative transaction amounts in each time steps.
-
-        | dim       | observation            | dim        | observation                 |
-        |-----------|------------------------|------------|-----------------------------|
-        | 0         | balance channel 0      | 0+n_channel| sum trn amount channel 0    |
-        | ...       |          ...           | ...        |            ...              |
-        | n_channel | balance last channel   | 2*n_channel| sum trn amount last channel |
-
-        ### Rewards
-
-        Since the goal is to maximize the return in long term, reward is sum of incomes from fee payments of each channel.
-        Reward scale is Sat in order to control the upperbound.
-
-        ***Note:
-        We are adding the income from each payment to balance of the corresponding channel.
-        """
-
 
         # Source node
         self.src = args.src

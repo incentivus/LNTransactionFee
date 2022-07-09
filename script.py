@@ -1,26 +1,29 @@
-import gym
-
+from env.multi_channel import FeeEnv
+from utils import initialize, load_data
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
 
 
 def test():
-# Parallel environments
-    env = make_vec_env("CartPole-v1", n_envs=4)
+    args = initialize()
+    data = load_data()
+    env = FeeEnv(data.src,
+                 data.trgs,
+                 data.channel_ids,
+                 data.node_variables,
+                 data.providers,
+                 data.active_providers,
+                 data.initial_active_channels,
+                 data.initial_network_dictionary,
+                 args)
 
-    model = PPO("MlpPolicy", env, verbose=1)
-    model.learn(total_timesteps=1000)
-    model.save("ppo_cartpole")
-
-    del model # remove to demonstrate saving and loading
+    model = PPO("MlpPolicy", env, tensorboard_log="./results/", verbose=1)
+    model.learn(total_timesteps=50000)
+    #model.save("ppo_cartpole")
 
     model = PPO.load("ppo_cartpole")
 
     obs = env.reset()
-    while True:
-        action, _states = model.predict(obs)
-        obs, rewards, dones, info = env.step(action)
-        env.render()
 
 
 

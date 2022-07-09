@@ -2,55 +2,60 @@ import gym
 from gym import spaces
 import numpy as np
 
+from Simulator.LightningNetworkSimulator.simulator.simulator import simulator
 
 class FeeEnv(gym.Env):
+    """
+    ### Description
 
-"""
-### Description
+    This environment corresponds to the LIGHTNING NETWORK simulation. A source node is chosen and a local network
+    around that node with radius 2 is created and at each time step, a certain number of transitions are being simulated.
 
-This environment corresponds to the LIGHTNING NETWORK simulation. A source node is chosen and a local network
-around that node with radius 2 is created and at each time step, a certain number of transitions are being simulated.
+    ### Scales
 
-### Scales
+    We are using the following scales for simulating the real world Lightning Network:
 
-We are using the following scales for simulating the real world Lightning Network:
+    - Fee Rate:                                        - Base Fee:
+    - Transaction amounts:                             - Reward(income):
+    - Capacity:                                        - Balance:
 
-- Fee Rate:                                        - Base Fee:
-- Transaction amounts:                             - Reward(income):
-- Capacity:                                        - Balance:
+    ### Action Space
 
-### Action Space
+    The action is a `ndarray` with shape `(2*n_channel,)` which can take values `[0,upper bound]`
+    indicating the fee rate and base fee of each channel starting from source node.
 
-The action is a `ndarray` with shape `(2*n_channel,)` which can take values `[0,upper bound]`
-indicating the fee rate and base fee of each channel starting from source node.
+    | dim       | action                 | dim        | action                |
+    |-----------|------------------------|------------|-----------------------|
+    | 0         | fee rate channel 0     | 0+n_channel| fee base channel 0    |
+    | ...       |        ...             | ...        |         ...           |
+    | n_channel | fee rate last channel  | 2*n_channel| fee base last channel |
 
-| dim       | action                 | dim        | action                |
-|-----------|------------------------|------------|-----------------------|
-| 0         | fee rate channel 0     | 0+n_channel| fee base channel 0    |
-| ...       |        ...             | ...        |         ...           |
-| n_channel | fee rate last channel  | 2*n_channel| fee base last channel |
+    ### Observation Space
 
-### Observation Space
+    The observation is a `ndarray` with shape `(2*n_channel,)` with the values corresponding to the balance of each
+    channel and also accumulative transaction amounts in each time steps.
 
-The observation is a `ndarray` with shape `(2*n_channel,)` with the values corresponding to the balance of each
-channel and also accumulative transaction amounts in each time steps.
+    | dim       | observation            | dim        | observation                 |
+    |-----------|------------------------|------------|-----------------------------|
+    | 0         | balance channel 0      | 0+n_channel| sum trn amount channel 0    |
+    | ...       |          ...           | ...        |            ...              |
+    | n_channel | balance last channel   | 2*n_channel| sum trn amount last channel |
 
-| dim       | observation            | dim        | observation                 |
-|-----------|------------------------|------------|-----------------------------|
-| 0         | balance channel 0      | 0+n_channel| sum trn amount channel 0    |
-| ...       |          ...           | ...        |            ...              |
-| n_channel | balance last channel   | 2*n_channel| sum trn amount last channel |
+    ### Rewards
 
-### Rewards
+    Since the goal is to maximize the return in long term, reward is sum of incomes from fee payments of each channel.
+    Reward scale is Sat in order to control the upperbound.
 
-Since the goal is to maximize the return in long term, reward is sum of incomes from fee payments of each channel.
-Reward scale is Sat in order to control the upperbound.
+    ***Note:
+    We are adding the income from each payment to balance of the corresponding channel.
+    """
 
-***Note:
-We are adding the income from each payment to balance of the corresponding channel.
-"""
+
 
     def __init__(self,
+                 src,
+                 trgs,
+                 channel_ids,
                  node_variables,
                  providers,
                  active_providers,
@@ -59,8 +64,9 @@ We are adding the income from each payment to balance of the corresponding chann
                  args):
 
         # Source node
-        self.src = args.src
-        self.n_channel = args.n_channel
+        self.src = src
+        self.trgs = trgs
+        self.n_channel = len(trgs)
 
         # Base fee and fee rate for each channel of src
         self.action_space = spaces.Box(low=-1, high=+1, shape=(2*self.n_channel,), dtype=np.float32)
@@ -86,28 +92,17 @@ We are adding the income from each payment to balance of the corresponding chann
         self.active_channels = initial_active_channels  # Channels with changing balance
         self.network_dictionary = initial_network_dictionary  # For saving subgraph status
 
-        self.simulator = simulator.simulator(self.src, self.trg, self.channel_id,  # channel datat
-                                             self.active_channels,  # network structure
-                                             self.network_dictionary,
-                                             self.providers,
-                                             count=self.count,
-                                             amount=self.amount,
-                                             epsilon=self.epsilon,
-                                             node_variables=self.node_variables,
-                                             active_providers=self.active_providers,
-                                             fixed_transactions=False)
+        self.simulator = simulator(src=src,
+                                   trgs=trgs,
+                                   channel_ids=channel_ids,
+                                   active_channels=initial_active_channels,
+                                   network_dictionary=initial_network_dictionary,
+                                   merchants=providers,
+                                   transaction_types=args.transaction_types,
+                                   node_variables=node_variables,
+                                   active_providers=active_providers)
 
-        # Logging results
-        self.buffer = []
-        self.avg_buffer = []
-        self.k_buffer = []
-        self.k_buffer_avg = []
-        self.alpha_buffer = []
-        self.alpha_buffer_avg = []
-        self.beta_buffer = []
-        self.beta_buffer_avg = []
-
-        self.seed()
+        self.seed(args.seed)
 
     def step(self, action):
 
@@ -118,7 +113,7 @@ We are adding the income from each payment to balance of the corresponding chann
                                                   .5 * self.fee_base_upper_bound
 
         # Running simulator for a certain time interval
-        balances, transaction_amounts, transaction_numbers = self.ln_sim(self.src, action)
+        balances, transaction_amounts, transaction_numbers = self.simulate_transactions(self.src, action)
         self.time_step += 1
 
         reward = np.sum(np.multiply(action[0:self.n_channel], transaction_amounts) +\
@@ -136,27 +131,23 @@ We are adding the income from each payment to balance of the corresponding chann
 
         return self.state, reward, done, info
 
-    def ln_sim(self, action):  # k(int) tx(float) r(npArray)
 
-        self.simulator.set_node_fee(self.src, action)
+    def simulate_transactions(self, action):
 
-        transactions = self.simulator.run_simulation(self.count, self.amount, action)
-        k, tx, rebalancing_fee, rebalancing_type = self.simulator.get_coeffiecients(action, transactions, self.src,
-                                                                                    self.trg, self.channel_id,
-                                                                                    self.amount,
-                                                                                    self.onchain_transaction_fee)
-        other_k = self.simulator.get_k(trg, src, channel_id, transactions)
+        self.simulator.set_channels_fees(self.src, action)
 
-        capacity = self.simulator.get_capacity(self.src, self.trg, self.channel_id)
-        balance = self.simulator.get_balance(self.src, self.trg, self.channel_id)
+        output_transactions_dict = self.simulator.run_simulation(action)
+        balances, transaction_amounts, transaction_numbers = self.simulator.get_simulation_results(action, output_transactions_dict)
 
-        return k, tx, other_k, rebalancing_fee, rebalancing_type, capacity, balance
+        return balances, transaction_amounts, transaction_numbers
 
-    def get_buffers(self):
-        return self.buffer, self.alpha_buffer_avg, self.beta_buffer_avg, self.k_buffer_avg
 
     def reset(self):
         self.time_step = 0
         self.state = np.append(self.initial_balances, np.zeros(shape=(self.n_channel,)))
 
         return np.array([self.state], dtype=np.float32)
+
+    def seed(seed):
+        #TODO
+        pass

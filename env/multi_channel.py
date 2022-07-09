@@ -15,9 +15,9 @@ class FeeEnv(gym.Env):
 
     We are using the following scales for simulating the real world Lightning Network:
 
-    - Fee Rate:                                        - Base Fee:
-    - Transaction amounts:                             - Reward(income):
-    - Capacity:                                        - Balance:
+    - Fee Rate: msat                                      - Base Fee: msat
+    - Transaction amounts: sat                            - Reward(income): msat
+    - Capacity: sat                                       - Balance: sat
 
     ### Action Space
 
@@ -52,21 +52,12 @@ class FeeEnv(gym.Env):
 
 
 
-    def __init__(self,
-                 src,
-                 trgs,
-                 channel_ids,
-                 node_variables,
-                 providers,
-                 active_providers,
-                 initial_active_channels,
-                 initial_network_dictionary,
-                 args):
+    def __init__(self, data, args):
 
         # Source node
-        self.src = src
-        self.trgs = trgs
-        self.n_channel = len(trgs)
+        self.src = data['src']
+        self.trgs = data['trgs']
+        self.n_channel = len(self.trgs)
 
         # Base fee and fee rate for each channel of src
         self.action_space = spaces.Box(low=-1, high=+1, shape=(2*self.n_channel,), dtype=np.float32)
@@ -77,30 +68,24 @@ class FeeEnv(gym.Env):
         self.observation_space = spaces.Box(low=0, high=1, shape=(2*self.n_channel,), dtype=np.float32)
 
         # Initial values of each channel
-        self.initial_balances = args.initial_balances
-        self.capacities = args.capacities
+        self.initial_balances = data['initial_balances']
+        self.capacities = data['capacities']
         self.state = np.append(self.initial_balances, np.zeros(shape=(self.n_channel,)))
 
         self.time_step = 0
         self.max_episode_length = args.max_episode_length
         self.balance_ratio = 0.1
 
-        # Simulator variables
-        self.node_variables = node_variables
-        self.providers = providers  # Network merchants
-        self.active_providers = active_providers  # Subnetwork merchants
-        self.active_channels = initial_active_channels  # Channels with changing balance
-        self.network_dictionary = initial_network_dictionary  # For saving subgraph status
-
-        self.simulator = simulator(src=src,
-                                   trgs=trgs,
-                                   channel_ids=channel_ids,
-                                   active_channels=initial_active_channels,
-                                   network_dictionary=initial_network_dictionary,
-                                   merchants=providers,
+        # Simulator
+        self.simulator = simulator(src=data['src'],
+                                   trgs=data['trgs'],
+                                   channel_ids=data['channel_ids'],
+                                   active_channels=data['active_channels'],
+                                   network_dictionary=data['network_dictionary'],
+                                   merchants=data['providers'],
                                    transaction_types=args.transaction_types,
-                                   node_variables=node_variables,
-                                   active_providers=active_providers)
+                                   node_variables=data['node_variables'],
+                                   active_providers=data['active_providers'])
 
         self.seed(args.seed)
 

@@ -59,6 +59,8 @@ def initialize():
                         help='upper bound on the fee rate of each channel (default: 1000 msat)')
     parser.add_argument('--fee_base_upper_bound', type=int, default=10000,
                         help='upper bound on the fee base of each channel (default: 1)')
+    parser.add_argument('--obs_upper_bound', type=int, default=2000000,
+                        help='upper bound on the fee base of each channel (default: 1)')
 
     parser.add_argument('--max_episode_length', type=int, default=200,
                         help='max time steps in each episode (default: 200)')

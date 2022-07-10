@@ -63,6 +63,7 @@ class FeeEnv(gym.Env):
         self.action_space = spaces.Box(low=-1, high=+1, shape=(2 * self.n_channel,), dtype=np.float32)
         self.fee_rate_upper_bound = args.fee_rate_upper_bound
         self.fee_base_upper_bound = args.fee_base_upper_bound
+        self.obs_upper_bound = args.obs_upper_bound
 
         # Balance and transaction amount of each channel
         self.observation_space = spaces.Box(low=0, high=1, shape=(2 * self.n_channel,), dtype=np.float32)
@@ -100,18 +101,21 @@ class FeeEnv(gym.Env):
                                                                                      self.n_channel:2 * self.n_channel] + \
                                                     .5 * self.fee_base_upper_bound
 
+
         # Running simulator for a certain time interval
         balances, transaction_amounts, transaction_numbers = self.simulate_transactions(action)
         self.time_step += 1
 
-        reward = 1e-6 * np.sum(np.multiply(action[0:self.n_channel], transaction_amounts) +
-                               np.multiply(action[self.n_channel:2 * self.n_channel], transaction_numbers))
+        reward = 1e-6 * np.sum(np.multiply(action[0:self.n_channel], transaction_amounts) + \
+                        np.multiply(action[self.n_channel:2 * self.n_channel], transaction_numbers))
 
         info = {'TimeLimit.truncated': True if self.time_step >= self.max_episode_length else False}
 
         done = self.time_step >= self.max_episode_length
 
         self.state = np.append(balances, transaction_amounts)
+
+        obs = self.state / self.obs_upper_bound
 
         return self.state, reward, done, info
 

@@ -20,23 +20,24 @@ def load_data():
                 network_dictionary: whole network data  (default: dict)
             }
     """
+    print('==================Loading Network Data==================')
     data = {}
     providers_path = './data/merchants.json'
     directed_edges_path = './data/new_data.pkl'
-    src_index = 1360
+    src_index = 505
     subgraph_radius = 2
-    providers = preprocessing.get_providers(providers_path)
+    data['providers'] = preprocessing.get_providers(providers_path)
     directed_edges = preprocessing.get_directed_edges(directed_edges_path)
     data['src'], data['trgs'], data['channel_ids'], n_channels = preprocessing.select_node(directed_edges, src_index)
-    data.capacities = [2000000] * n_channels
-    data.initial_balances = [1000000] * n_channels
+    data['capacities'] = [2000000] * n_channels
+    data['initial_balances'] = [1000000] * n_channels
     channels = []
     for trg in data['trgs']:
         channels.append((data['src'], trg))
     data['active_channels'],\
     data['network_dictionary'],\
     data['node_variables'],\
-    data['active_providers'] = preprocessing.get_init_parameters(providers,
+    data['active_providers'] = preprocessing.get_init_parameters(data['providers'],
                                                                  directed_edges,
                                                                  data['src'], data['trgs'],
                                                                  data['channel_ids'],
@@ -48,18 +49,29 @@ def load_data():
 
 
 def initialize():
+    print('=================initializing parameters================')
     parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
 
     parser.add_argument('--env_name', default='FeeEnv',
                         help='Lightning Network Fee simulation (default: FeeEnv)')
-    parser.add_argument('--fee_rate_upper_bound', type=int, default=1,
-                        help='upper bound on the fee rate of each channel (default: 1)')
-    parser.add_argument('--fee_base_upper_bound', type=int, default=1,
+
+    parser.add_argument('--fee_rate_upper_bound', type=int, default=1000,
+                        help='upper bound on the fee rate of each channel (default: 1000 msat)')
+    parser.add_argument('--fee_base_upper_bound', type=int, default=10000,
                         help='upper bound on the fee base of each channel (default: 1)')
+
     parser.add_argument('--max_episode_length', type=int, default=200,
                         help='max time steps in each episode (default: 200)')
-    parser.add_argument('--transaction_types', default=[1, 1],
-                        help='list of different amount of transactions to me simulated')
+
+    parser.add_argument('--number_of_transaction_types', type=int, default=3,
+                        help='number of different transaction types to be simulated')
+    parser.add_argument('--counts', default=[10, 10, 10],
+                        help='number of different amount of transactions to be simulated')
+    parser.add_argument('--amounts', default=[10000, 50000, 100000],
+                        help='msat amounts of different amount of transactions to be simulated')
+    parser.add_argument('--epsilons', default=[.6, .6, .6],
+                        help='merchant ratios')
+
     parser.add_argument('--seed', type=int, default=12345,
                         help='randomness of simulation')
 

@@ -3,6 +3,8 @@ from gym import spaces
 import numpy as np
 
 from Simulator.LightningNetworkSimulator.simulator.simulator import simulator
+from Simulator.LightningNetworkSimulator.simulator.preprocessing import generate_transaction_types
+
 
 class FeeEnv(gym.Env):
     """
@@ -50,22 +52,20 @@ class FeeEnv(gym.Env):
     We are adding the income from each payment to balance of the corresponding channel.
     """
 
-
-
     def __init__(self, data, args):
-
         # Source node
         self.src = data['src']
         self.trgs = data['trgs']
         self.n_channel = len(self.trgs)
+        print('actione dim:', 2 * self.n_channel)
 
         # Base fee and fee rate for each channel of src
-        self.action_space = spaces.Box(low=-1, high=+1, shape=(2*self.n_channel,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=+1, shape=(2 * self.n_channel,), dtype=np.float32)
         self.fee_rate_upper_bound = args.fee_rate_upper_bound
         self.fee_base_upper_bound = args.fee_base_upper_bound
 
         # Balance and transaction amount of each channel
-        self.observation_space = spaces.Box(low=0, high=1, shape=(2*self.n_channel,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=1, shape=(2 * self.n_channel,), dtype=np.float32)
 
         # Initial values of each channel
         self.initial_balances = data['initial_balances']
@@ -77,62 +77,60 @@ class FeeEnv(gym.Env):
         self.balance_ratio = 0.1
 
         # Simulator
+        transaction_types = generate_transaction_types(args.number_of_transaction_types, args.counts, args.amounts,
+                                                       args.epsilons)
         self.simulator = simulator(src=data['src'],
                                    trgs=data['trgs'],
                                    channel_ids=data['channel_ids'],
                                    active_channels=data['active_channels'],
                                    network_dictionary=data['network_dictionary'],
                                    merchants=data['providers'],
-                                   transaction_types=args.transaction_types,
+                                   transaction_types=transaction_types,
                                    node_variables=data['node_variables'],
-                                   active_providers=data['active_providers'])
+                                   active_providers=data['active_providers'],
+                                   fixed_transactions=False)
 
         self.seed(args.seed)
 
     def step(self, action):
-
         # Rescaling the action vector
-        action[0:self.n_channel] = .5 * self.fee_rate_upper_bound * action +\
+        action[0:self.n_channel] = .5 * self.fee_rate_upper_bound * action[0:self.n_channel] + \
                                    .5 * self.fee_rate_upper_bound
-        action[self.n_channel:2*self.n_channel] = .5 * self.fee_base_upper_bound * action +\
-                                                  .5 * self.fee_base_upper_bound
+        action[self.n_channel:2 * self.n_channel] = .5 * self.fee_base_upper_bound * action[
+                                                                                     self.n_channel:2 * self.n_channel] + \
+                                                    .5 * self.fee_base_upper_bound
 
         # Running simulator for a certain time interval
-        balances, transaction_amounts, transaction_numbers = self.simulate_transactions(self.src, action)
+        balances, transaction_amounts, transaction_numbers = self.simulate_transactions(action)
         self.time_step += 1
 
-        reward = np.sum(np.multiply(action[0:self.n_channel], transaction_amounts) +\
-                        np.multiply(action[self.n_channel:2*self.n_channel], transaction_numbers))
+        reward = 1e-6 * np.sum(np.multiply(action[0:self.n_channel], transaction_amounts) +
+                               np.multiply(action[self.n_channel:2 * self.n_channel], transaction_numbers))
 
-        info = {}
-        info["TimeLimit.truncated"] = True if self.step_count >= self.max_episode_length
+        info = {'TimeLimit.truncated': True if self.time_step >= self.max_episode_length else False}
 
-        done = self.time_step >= self.max_episode_length or \
-               np.sum(balances)/np.sum(self.capacities) <= self.balance_ratio
+        done = self.time_step >= self.max_episode_length
 
         self.state = np.append(balances, transaction_amounts)
 
-        self.avg_buffer.append(reward)
-
         return self.state, reward, done, info
 
-
     def simulate_transactions(self, action):
-
-        self.simulator.set_channels_fees(self.src, action)
+        self.simulator.set_channels_fees(action)
 
         output_transactions_dict = self.simulator.run_simulation(action)
-        balances, transaction_amounts, transaction_numbers = self.simulator.get_simulation_results(action, output_transactions_dict)
+        balances, transaction_amounts, transaction_numbers = self.simulator.get_simulation_results(action,
+                                                                                                   output_transactions_dict)
 
         return balances, transaction_amounts, transaction_numbers
 
-
     def reset(self):
+        print('episode ended!')
         self.time_step = 0
         self.state = np.append(self.initial_balances, np.zeros(shape=(self.n_channel,)))
 
         return np.array([self.state], dtype=np.float32)
 
-    def seed(seed):
-        #TODO
+    def seed(self, seed):
+        # TODO
         pass

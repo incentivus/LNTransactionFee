@@ -66,7 +66,7 @@ def test():
 
     model = PPO("MlpPolicy", env, tensorboard_log="./results/", verbose=1)
     model.learn(total_timesteps=200000, tb_log_name="PPO new node 97851", eval_freq=600, n_eval_episodes=3)
-    model.save("TD3_alhpha_env")
+    model.save("PPO_97851_alhpha_env")
 
 
 

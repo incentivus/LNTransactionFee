@@ -2,8 +2,8 @@ import gym
 from gym import spaces
 import numpy as np
 
-from Simulator.LightningNetworkSimulator.simulator.simulator import simulator
-from Simulator.LightningNetworkSimulator.simulator.preprocessing import generate_transaction_types
+from simulator.simulator import simulator
+from simulator.preprocessing import generate_transaction_types
 
 
 class FeeEnv(gym.Env):
@@ -60,13 +60,13 @@ class FeeEnv(gym.Env):
         print('actione dim:', 2 * self.n_channel)
 
         # Base fee and fee rate for each channel of src
-        self.action_space = spaces.Box(low=-1, high=+1, shape=(2 * self.n_channel,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-1, high=+1, shape=(2 * self.n_channel,), dtype=np.float64)
         self.fee_rate_upper_bound = args.fee_rate_upper_bound
         self.fee_base_upper_bound = args.fee_base_upper_bound
         self.obs_upper_bound = args.obs_upper_bound
 
         # Balance and transaction amount of each channel
-        self.observation_space = spaces.Box(low=0, high=1, shape=(2 * self.n_channel,), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=1, shape=(2 * self.n_channel,), dtype=np.float64)
 
         # Initial values of each channel
         self.initial_balances = data['initial_balances']
@@ -101,6 +101,7 @@ class FeeEnv(gym.Env):
                                                                                      self.n_channel:2 * self.n_channel] + \
                                                     .5 * self.fee_base_upper_bound
 
+        print('in step,', action)
 
         # Running simulator for a certain time interval
         balances, transaction_amounts, transaction_numbers = self.simulate_transactions(action)
@@ -133,7 +134,7 @@ class FeeEnv(gym.Env):
         self.time_step = 0
         self.state = np.append(self.initial_balances, np.zeros(shape=(self.n_channel,)))
 
-        return np.array([self.state], dtype=np.float32)
+        return np.array(self.state, dtype=np.float64)
 
     def seed(self, seed):
         # TODO

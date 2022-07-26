@@ -1,7 +1,7 @@
 import argparse
 import argparse
-import Simulator.LightningNetworkSimulator.simulator.generating_transactions
-from Simulator.LightningNetworkSimulator.simulator import preprocessing
+import simulator.generating_transactions
+from simulator import preprocessing
 
 
 
@@ -23,7 +23,7 @@ def load_data():
     print('==================Loading Network Data==================')
     data = {}
     providers_path = './data/merchants.json'
-    directed_edges_path = './data/new_data.pkl'
+    directed_edges_path = './data/data.json'
     src_index = 97851
     subgraph_radius = 2
     data['providers'] = preprocessing.get_providers(providers_path)
@@ -31,6 +31,7 @@ def load_data():
     data['src'], data['trgs'], data['channel_ids'], n_channels = preprocessing.select_node(directed_edges, src_index)
     data['capacities'] = [153243, 8500000, 4101029, 5900000, 2500000, 7000000]
     data['initial_balances'] = [153243/2, 8500000/2, 4101029/2, 5900000/2, 2500000/2, 7000000/2]
+    #data['initial_balances'] = [153243, 0, 0, 0, 0, 0]
     channels = []
     for trg in data['trgs']:
         channels.append((data['src'], trg))
@@ -73,6 +74,7 @@ def initialize():
                         help='msat amounts of different amount of transactions to be simulated')
     parser.add_argument('--epsilons', default=[.6, .6, .6],
                         help='merchant ratios')
+
 
     parser.add_argument('--seed', type=int, default=12345,
                         help='randomness of simulation')

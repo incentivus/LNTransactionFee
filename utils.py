@@ -1,6 +1,3 @@
-import argparse
-import argparse
-import simulator.generating_transactions
 from simulator import preprocessing
 
 
@@ -70,37 +67,3 @@ def load_data(node):
                                                                  subgraph_radius,
                                                                  channels)
     return data
-
-
-def initialize():
-    print('=================initializing parameters================')
-    parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
-
-    parser.add_argument('--env_name', default='FeeEnv',
-                        help='Lightning Network Fee simulation (default: FeeEnv)')
-
-    parser.add_argument('--fee_rate_upper_bound', type=int, default=1000,
-                        help='upper bound on the fee rate of each channel (default: 1000 msat)')
-    parser.add_argument('--fee_base_upper_bound', type=int, default=10000,
-                        help='upper bound on the fee base of each channel (default: 1)')
-    parser.add_argument('--obs_upper_bound', type=int, default=2000000,
-                        help='upper bound on the fee base of each channel (default: 1)')
-
-    parser.add_argument('--max_episode_length', type=int, default=200,
-                        help='max time steps in each episode (default: 200)')
-
-    parser.add_argument('--number_of_transaction_types', type=int, default=3,
-                        help='number of different transaction types to be simulated')
-    parser.add_argument('--counts', default=[10, 10, 10],
-                        help='number of different amount of transactions to be simulated')
-    parser.add_argument('--amounts', default=[10000, 50000, 100000],
-                        help='msat amounts of different amount of transactions to be simulated')
-    parser.add_argument('--epsilons', default=[.6, .6, .6],
-                        help='merchant ratios')
-
-    parser.add_argument('--seed', type=int, default=12345,
-                        help='randomness of simulation')
-
-    args = parser.parse_args()
-
-    return args

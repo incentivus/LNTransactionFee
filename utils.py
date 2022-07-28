@@ -4,6 +4,29 @@ import simulator.generating_transactions
 from simulator import preprocessing
 
 
+def make_agent(env, agent, tb_log_dir):
+    policy = "MlpPolicy"
+    # create model
+    if agent == "PPO":
+        from stable_baselines3 import PPO
+        model = PPO(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif agent == "TRPO":
+        from sb3_contrib import TRPO
+        model = TRPO(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif agent == "SAC":
+        from stable_baselines3 import SAC
+        model = SAC(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif agent == "DDPG":
+        from stable_baselines3 import DDPG
+        model = DDPG(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif agent == "TD3":
+        from stable_baselines3 import TD3
+        model = TD3(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    else:
+        raise NotImplementedError()
+
+    return model
+
 
 def load_data():
     """
@@ -30,14 +53,14 @@ def load_data():
     directed_edges = preprocessing.get_directed_edges(directed_edges_path)
     data['src'], data['trgs'], data['channel_ids'], n_channels = preprocessing.select_node(directed_edges, src_index)
     data['capacities'] = [153243, 8500000, 4101029, 5900000, 2500000, 7000000]
-    data['initial_balances'] = [153243/2, 8500000/2, 4101029/2, 5900000/2, 2500000/2, 7000000/2]
-    #data['initial_balances'] = [153243, 0, 0, 0, 0, 0]
+    data['initial_balances'] = [153243 / 2, 8500000 / 2, 4101029 / 2, 5900000 / 2, 2500000 / 2, 7000000 / 2]
+    # data['initial_balances'] = [153243, 0, 0, 0, 0, 0]
     channels = []
     for trg in data['trgs']:
         channels.append((data['src'], trg))
-    data['active_channels'],\
-    data['network_dictionary'],\
-    data['node_variables'],\
+    data['active_channels'], \
+    data['network_dictionary'], \
+    data['node_variables'], \
     data['active_providers'] = preprocessing.get_init_parameters(data['providers'],
                                                                  directed_edges,
                                                                  data['src'], data['trgs'],
@@ -74,7 +97,6 @@ def initialize():
                         help='msat amounts of different amount of transactions to be simulated')
     parser.add_argument('--epsilons', default=[.6, .6, .6],
                         help='merchant ratios')
-
 
     parser.add_argument('--seed', type=int, default=12345,
                         help='randomness of simulation')

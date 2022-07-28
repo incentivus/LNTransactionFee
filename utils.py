@@ -28,7 +28,7 @@ def make_agent(env, agent, tb_log_dir):
     return model
 
 
-def load_data():
+def load_data(node):
     """
     :return:
     data = dict{src: node chosen for simulation  (default: int)
@@ -47,7 +47,7 @@ def load_data():
     data = {}
     providers_path = './data/merchants.json'
     directed_edges_path = './data/data.json'
-    src_index = 97851
+    src_index = node
     subgraph_radius = 2
     data['providers'] = preprocessing.get_providers(providers_path)
     directed_edges = preprocessing.get_directed_edges(directed_edges_path)

@@ -6,10 +6,10 @@ from numpy import load
 import gym
 
 
-def train(agent, tb_log_dir, log_dir, seed, fee_base_upper_bound, max_episode_length, number_of_transaction_types,
+def train(agent, node_indx, tb_log_dir, log_dir, seed, fee_base_upper_bound, max_episode_length, number_of_transaction_types,
           counts,
           amounts, epsilons):
-    data = load_data()
+    data = load_data(node_indx)
     env = FeeEnv(data, fee_base_upper_bound, max_episode_length, number_of_transaction_types, counts, amounts, epsilons,
                  seed)
     model = make_agent(env, agent, tb_log_dir)
@@ -22,6 +22,7 @@ def main():
     parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
     parser.add_argument('--agent', choices=['PPO', 'TRPO', 'SAC', 'TD3', 'A2C', 'DDPG'], default='TRPO')
     parser.add_argument('--tb_log_dir', default='./results')
+    parser.add_argument('--node_indx', type=int, default=97851)
     parser.add_argument('--log_dir', default='./results/model')
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--fee_base_upper_bound', type=int, default=10000)
@@ -31,7 +32,7 @@ def main():
     parser.add_argument('--amounts', default=[10000, 50000, 100000])
     parser.add_argument('--epsilons', default=[.6, .6, .6])
     args = parser.parse_args()
-    train(agent=args.agent, tb_log_dir=args.tb_log_dir, log_dir=args.log_dir, seed=args.seed,
+    train(agent=args.agent, node_indx=args.node_indx, tb_log_dir=args.tb_log_dir, log_dir=args.log_dir, seed=args.seed,
           fee_base_upper_bound=args.fee_base_upper_bound, max_episode_length=args.max_episode_length,
           number_of_transaction_types=args.number_of_transaction_types, counts=args.counts, amounts=args.amounts,
           epsilons=args.epsilons)

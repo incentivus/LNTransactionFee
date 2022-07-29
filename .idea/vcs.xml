@@ -2,6 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/plotting/tensorboard-aggregator" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/simulator/LightningNetworkSimulator" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tensorboard-aggregator" vcs="Git" />
   </component>
 </project>

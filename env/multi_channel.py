@@ -1,5 +1,6 @@
 import gym
 from gym import spaces
+from gym.utils import seeding
 import numpy as np
 
 from simulator.simulator import simulator
@@ -92,6 +93,12 @@ class FeeEnv(gym.Env):
 
         self.seed(seed)
 
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
+
+
     def step(self, action):
         # Rescaling the action vector
         action[0:self.n_channel] = .5 * self.fee_rate_upper_bound * action[0:self.n_channel] + \
@@ -132,6 +139,3 @@ class FeeEnv(gym.Env):
 
         return np.array(self.state, dtype=np.float64)
 
-    def seed(self, seed):
-        # TODO
-        pass

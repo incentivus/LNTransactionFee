@@ -1,28 +1,41 @@
 from simulator import preprocessing
+from env.multi_channel import FeeEnv
 
 
-def make_agent(env, agent, tb_log_dir):
+
+def make_agent(env, algo, tb_log_dir):
     policy = "MlpPolicy"
     # create model
-    if agent == "PPO":
+    if algo == "PPO":
         from stable_baselines3 import PPO
         model = PPO(policy, env, verbose=1, tensorboard_log=tb_log_dir)
-    elif agent == "TRPO":
+    elif algo == "TRPO":
         from sb3_contrib import TRPO
         model = TRPO(policy, env, verbose=1, tensorboard_log=tb_log_dir)
-    elif agent == "SAC":
+    elif algo == "SAC":
         from stable_baselines3 import SAC
         model = SAC(policy, env, verbose=1, tensorboard_log=tb_log_dir)
-    elif agent == "DDPG":
+    elif algo == "DDPG":
         from stable_baselines3 import DDPG
         model = DDPG(policy, env, verbose=1, tensorboard_log=tb_log_dir)
-    elif agent == "TD3":
+    elif algo == "TD3":
         from stable_baselines3 import TD3
         model = TD3(policy, env, verbose=1, tensorboard_log=tb_log_dir)
     else:
         raise NotImplementedError()
 
     return model
+
+
+def make_env(data, env_params, seed):
+
+    env = FeeEnv(data, env_params['fee_base_upper_bound'], env_params['max_episode_length'],
+                 env_params['number_of_transaction_types'],
+                 env_params['counts'], env_params['amounts'], env_params['epsilons'],
+                 seed)
+
+    return env
+
 
 
 def load_data(node):
@@ -42,8 +55,8 @@ def load_data(node):
     """
     print('==================Loading Network Data==================')
     data = {}
-    providers_path = './data/merchants.json'
-    directed_edges_path = './data/data.json'
+    providers_path = '../data/merchants.json'
+    directed_edges_path = '../data/data.json'
     src_index = node
     subgraph_radius = 2
     data['providers'] = preprocessing.get_providers(providers_path)

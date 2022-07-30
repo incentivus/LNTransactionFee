@@ -1,6 +1,7 @@
 import networkx as nx
 import pandas as pd
 import json
+import numpy as np
 
 
 def aggregate_edges(directed_edges):
@@ -95,10 +96,10 @@ def create_active_channels(network_dictionary, channels):
     return active_channels
 
 
-def create_sub_network(directed_edges, providers, src, trgs, channel_ids, capacities, initial_balances, radius):
+def create_sub_network(directed_edges, providers, src, trgs, channel_ids, radius):
     """creating network_dictionary, edges and providers for the local subgraph."""
     edges = initiate_balances(directed_edges)
-    edges = set_channels_balances(edges, src, trgs, channel_ids, capacities, initial_balances)
+    # edges = set_channels_balances(edges, src, trgs, channel_ids, capacities, initial_balances)
     G = nx.from_pandas_edgelist(edges, source="src", target="trg",
                                 edge_attr=['channel_id', 'capacity', 'fee_base_msat', 'fee_rate_milli_msat', 'balance'],
                                 create_using=nx.DiGraph())
@@ -151,11 +152,9 @@ def select_node(directed_edges, src_index):
     return src, list(trgs), list(channel_ids), number_of_channels
 
 
-def get_init_parameters(providers, directed_edges, src, trgs, channel_ids, capacities, initial_balances,
-                        subgraph_radius, channels):
+def get_init_parameters(providers, directed_edges, src, trgs, channel_ids, subgraph_radius, channels):
     network_dictionary, nodes, sub_providers, sub_edges = create_sub_network(directed_edges, providers, src, trgs,
-                                                                             channel_ids, capacities, initial_balances,
-                                                                             subgraph_radius)
+                                                                             channel_ids, subgraph_radius)
     active_channels = create_active_channels(network_dictionary, channels)
     try:
         node_variables, active_providers, active_ratio = init_node_params(sub_edges, sub_providers, verbose=True)

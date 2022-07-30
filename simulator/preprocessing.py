@@ -161,8 +161,15 @@ def get_init_parameters(providers, directed_edges, src, trgs, channel_ids, subgr
     except:
         print('zero providers!')
 
-    return active_channels, network_dictionary, node_variables, active_providers
+    balances = []
+    capacities = []
+    for trg in trgs:
+        b = network_dictionary[(src, trg)][0]
+        c = network_dictionary[(src, trg)][3]
+        balances.append(b)
+        capacities.append(c)
 
+    return active_channels, network_dictionary, node_variables, active_providers, balances, capacities
 
 def generate_transaction_types(number_of_transaction_types, counts, amounts, epsilons):
     transaction_types = []

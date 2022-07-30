@@ -18,7 +18,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
     parser.add_argument('--algo', choices=['PPO', 'TRPO', 'SAC', 'TD3', 'A2C', 'DDPG'], default='TRPO')
-    parser.add_argument('--tb_log_dir', default='./LNTransactionFee/results')
+    parser.add_argument('--tb_log_dir', default='../LNTransactionFee/results/')
     parser.add_argument('--node_index', type=int, default=97851)
     parser.add_argument('--log_dir', default='./LNTransactionFee/results/trained_model/')
     parser.add_argument('--n_seed', type=int, default=1)

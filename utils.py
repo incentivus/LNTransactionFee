@@ -2,7 +2,6 @@ from simulator import preprocessing
 from env.multi_channel import FeeEnv
 
 
-
 def make_agent(env, algo, tb_log_dir):
     policy = "MlpPolicy"
     # create model
@@ -28,14 +27,12 @@ def make_agent(env, algo, tb_log_dir):
 
 
 def make_env(data, env_params, seed):
-
     env = FeeEnv(data, env_params['fee_base_upper_bound'], env_params['max_episode_length'],
                  env_params['number_of_transaction_types'],
                  env_params['counts'], env_params['amounts'], env_params['epsilons'],
                  seed)
 
     return env
-
 
 
 def load_data(node):
@@ -71,12 +68,12 @@ def load_data(node):
     data['active_channels'], \
     data['network_dictionary'], \
     data['node_variables'], \
-    data['active_providers'] = preprocessing.get_init_parameters(data['providers'],
+    data['active_providers'], \
+    data['initial_balances'],\
+    data['capacities'] = preprocessing.get_init_parameters(data['providers'],
                                                                  directed_edges,
                                                                  data['src'], data['trgs'],
                                                                  data['channel_ids'],
-                                                                 data['capacities'],
-                                                                 data['initial_balances'],
                                                                  subgraph_radius,
                                                                  channels)
     return data

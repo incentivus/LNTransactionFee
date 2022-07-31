@@ -1,14 +1,15 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from utils import create_reward_dataframe_for_plotting
+from plotting.utils import create_reward_dataframe_for_plotting
 import os
 
 if __name__ == "__main__":
 
-    paths = ['../scripts/results/test_1/events.out.tfevents.1659091274.Aidas-MacBook.73543.0',
-             '../scripts/results/test_2/events.out.tfevents.1659107137.Aidas-MacBook.74013.0']
+    paths = ['results/test_1/events.out.tfevents.1659272192.mbk-64-82.mpi-sws.org.28934.0',
+             'results/test_2/events.out.tfevents.1659273371.mbk-64-82.mpi-sws.org.28934.1',
+             'results/test_3/events.out.tfevents.1659275083.mbk-64-82.mpi-sws.org.28934.2']
 
-    save_dir = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/plots_and_stats/'
+    save_dir = 'plotting/plots_and_stats/'
     df = create_reward_dataframe_for_plotting(paths)
     df.to_csv(os.path.join(save_dir, 'stats.csv'))
 

@@ -17,13 +17,21 @@ def train(env_params, train_params, tb_log_dir, log_dir, seed):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
+<<<<<<< HEAD
     parser.add_argument('--algo', choices=['PPO', 'TRPO', 'SAC', 'TD3', 'A2C', 'DDPG'], default='TRPO')
     parser.add_argument('--tb_log_dir', default='../plotting/tb_results/')
     parser.add_argument('--node_index', type=int, default=97851)
     parser.add_argument('--log_dir', default='../plotting/tb_results/trained_model/')
     parser.add_argument('--n_seed', type=int, default=1)
+=======
+    parser.add_argument('--algo', choices=['PPO', 'TRPO', 'SAC', 'TD3', 'A2C', 'DDPG'], default='PPO')
+    parser.add_argument('--tb_log_dir', default='./results/')
+    parser.add_argument('--node_index', type=int, default=97851)
+    parser.add_argument('--log_dir', default='./results/trained_model/')
+    parser.add_argument('--n_seed', type=int, default=5)
+>>>>>>> 375bc381711a1ecd8af52ec600ac6d9d92e5b2e7
     parser.add_argument('--fee_base_upper_bound', type=int, default=10000)
-    parser.add_argument('--total_timesteps', type=int, default=3000)
+    parser.add_argument('--total_timesteps', type=int, default=1000000)
     parser.add_argument('--max_episode_length', type=int, default=200)
     parser.add_argument('--number_of_transaction_types', type=int, default=3)
     parser.add_argument('--counts', default=[10, 10, 10])

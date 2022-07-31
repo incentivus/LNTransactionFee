@@ -22,6 +22,9 @@ def make_agent(env, algo, tb_log_dir):
     elif algo == "TD3":
         from stable_baselines3 import TD3
         model = TD3(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif algo == "A2C":
+        from stable_baselines3 import A2C
+        model = A2C(policy, env, verbose=1, tensorboard_log=tb_log_dir)
     else:
         raise NotImplementedError()
 
@@ -54,8 +57,8 @@ def load_data(node):
     """
     print('==================Loading Network Data==================')
     data = {}
-    providers_path = '../data/merchants.json'
-    directed_edges_path = '../data/data.json'
+    providers_path = 'data/merchants.json'
+    directed_edges_path = 'data/data.json'
     src_index = node
     subgraph_radius = 2
     data['providers'] = preprocessing.get_providers(providers_path)

@@ -6,7 +6,7 @@ import numpy as np
 
 
 def train(env_params, train_params, tb_log_dir, log_dir, seed):
-    data = load_data(env_params['node_index'],)
+    data = load_data(env_params['node_index'], env_params['data_path'], env_params['merchants_path'])
     env = make_env(data, env_params, seed)
     model = make_agent(env, train_params['algo'], tb_log_dir)
     model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name="test")
@@ -18,8 +18,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
     parser.add_argument('--algo', choices=['PPO', 'TRPO', 'SAC', 'TD3', 'A2C', 'DDPG', 'TQC', 'ARS'], default='PPO')
-    parser.add_argument('--data_path', default='data/data.json')
-    parser.add_argument('--merchants_path', default='data/merchants.json')
+    parser.add_argument('--data_path', default='../data/data.json')
+    parser.add_argument('--merchants_path', default='../data/merchants.json')
     parser.add_argument('--tb_log_dir', default='plotting/tb_results')
     parser.add_argument('--node_index', type=int, default=97851)
     parser.add_argument('--log_dir', default='plotting/tb_results/trained_model/')

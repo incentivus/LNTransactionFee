@@ -61,12 +61,12 @@ class FeeEnv(gym.Env):
         print('actione dim:', 2 * self.n_channel)
 
         # Base fee and fee rate for each channel of src
-        self.action_space = spaces.Box(low=-1, high=+1, shape=(2 * self.n_channel,), dtype=np.float64)
+        self.action_space = spaces.Box(low=-1, high=+1, shape=(2 * self.n_channel,), dtype=np.float32)
         self.fee_rate_upper_bound = 1000
         self.fee_base_upper_bound = fee_base_upper_bound
 
         # Balance and transaction amount of each channel
-        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(2 * self.n_channel,), dtype=np.float64)
+        self.observation_space = spaces.Box(low=0, high=np.inf, shape=(2 * self.n_channel,), dtype=np.float32)
 
         # Initial values of each channel
         self.initial_balances = data['initial_balances']

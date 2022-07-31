@@ -25,7 +25,7 @@ All dependencies will be handled using the command :
 ### Run
 
 ```
-python -m scripts.ln_fee --algo PPO
+python3 -m scripts.ln_fee --algo PPO
 ```
 
 ### Parameters
@@ -53,6 +53,15 @@ You can check the results on tensorboard.
 ```
 tensorboard --logdir plotting/tb_results/
 ```
+
+## Trouble-shootings
+
+If you are facing problems with tensorboard, run the command below in terminal :
+
+```
+python3 -m tensorboard.main --logdir plotting/tb_results/
+```
+
 
 ## Citation
 

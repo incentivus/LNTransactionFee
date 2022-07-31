@@ -25,6 +25,12 @@ def make_agent(env, algo, tb_log_dir):
     elif algo == "A2C":
         from stable_baselines3 import A2C
         model = A2C(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif algo == "TQC":
+        from sb3_contrib import TQC
+        model = TQC(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+    elif algo == "ARS":
+        from sb3_contrib import ARS
+        model = ARS(policy, env, verbose=1, tensorboard_log=tb_log_dir)
     else:
         raise NotImplementedError()
 
@@ -32,15 +38,17 @@ def make_agent(env, algo, tb_log_dir):
 
 
 def make_env(data, env_params, seed):
+    assert len(env_params['counts']) == len(env_params['amounts']) and len(env_params['counts']) == len(
+        env_params['epsilons']), "number of transaction types missmatch"
     env = FeeEnv(data, env_params['fee_base_upper_bound'], env_params['max_episode_length'],
-                 env_params['number_of_transaction_types'],
+                 len(env_params['counts']),
                  env_params['counts'], env_params['amounts'], env_params['epsilons'],
                  seed)
 
     return env
 
 
-def load_data(node):
+def load_data(node, directed_edges_path, providers_path):
     """
     :return:
     data = dict{src: node chosen for simulation  (default: int)
@@ -57,8 +65,6 @@ def load_data(node):
     """
     print('==================Loading Network Data==================')
     data = {}
-    providers_path = 'data/merchants.json'
-    directed_edges_path = 'data/data.json'
     src_index = node
     subgraph_radius = 2
     data['providers'] = preprocessing.get_providers(providers_path)
@@ -74,13 +80,11 @@ def load_data(node):
     data['network_dictionary'], \
     data['node_variables'], \
     data['active_providers'], \
-    data['initial_balances'],\
+    data['initial_balances'], \
     data['capacities'] = preprocessing.get_init_parameters(data['providers'],
-                                                                 directed_edges,
-                                                                 data['src'], data['trgs'],
-                                                                 data['channel_ids'],
-                                                                 subgraph_radius,
-                                                                 channels)
+                                                           directed_edges,
+                                                           data['src'], data['trgs'],
+                                                           data['channel_ids'],
+                                                           subgraph_radius,
+                                                           channels)
     return data
-
-

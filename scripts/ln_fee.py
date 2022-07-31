@@ -18,8 +18,8 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description='Lightning network environment for multichannel')
     parser.add_argument('--algo', choices=['PPO', 'TRPO', 'SAC', 'TD3', 'A2C', 'DDPG', 'TQC', 'ARS'], default='PPO')
-    parser.add_argument('--data_path', default='../data/data.json')
-    parser.add_argument('--merchants_path', default='../data/merchants.json')
+    parser.add_argument('--data_path', default='data/data.json')
+    parser.add_argument('--merchants_path', default='data/merchants.json')
     parser.add_argument('--tb_log_dir', default='plotting/tb_results')
     parser.add_argument('--node_index', type=int, default=97851)
     parser.add_argument('--log_dir', default='plotting/tb_results/trained_model/')

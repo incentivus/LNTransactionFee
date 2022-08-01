@@ -5,11 +5,11 @@ import gym
 import numpy as np
 
 
-def train(env_params, train_params, tb_log_dir, log_dir, seed):
+def train(env_params, train_params, tb_log_dir, tb_name, log_dir, seed):
     data = load_data(env_params['node_index'], env_params['data_path'], env_params['merchants_path'])
     env = make_env(data, env_params, seed)
     model = make_agent(env, train_params['algo'], tb_log_dir)
-    model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name="test")
+    model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name=tb_name)
     # TODO : How to save for logging
     model.save(log_dir)
 
@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--data_path', default='data/data.json')
     parser.add_argument('--merchants_path', default='data/merchants.json')
     parser.add_argument('--tb_log_dir', default='plotting/tb_results')
+    parser.add_argument('--tb_name', default='PPO Final result')
     parser.add_argument('--node_index', type=int, default=97851)
     parser.add_argument('--log_dir', default='plotting/tb_results/trained_model/')
     parser.add_argument('--n_seed', type=int, default=5)
@@ -46,7 +47,7 @@ def main():
 
     for seed in range(args.n_seed):
         train(env_params, train_params,
-              tb_log_dir=args.tb_log_dir, log_dir=args.log_dir,
+              tb_log_dir=args.tb_log_dir, log_dir=args.log_dir, tb_name=args.tb_name,
               seed=np.random.randint(low=0, high=1000000))
 
 

@@ -11,7 +11,7 @@ def train(env_params, train_params, tb_log_dir, tb_name, log_dir, seed):
     model = make_agent(env, train_params['algo'], tb_log_dir)
     model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name=tb_name)
     # TODO : How to save for logging
-    model.save(log_dir)
+    model.save(log_dir+tb_log_name)
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--tb_name', default='PPO Final result')
     parser.add_argument('--node_index', type=int, default=97851)
     parser.add_argument('--log_dir', default='plotting/tb_results/trained_model/')
-    parser.add_argument('--n_seed', type=int, default=5)
+    parser.add_argument('--n_seed', type=int, default=1)
     parser.add_argument('--fee_base_upper_bound', type=int, default=10000)
     parser.add_argument('--total_timesteps', type=int, default=1000000)
     parser.add_argument('--max_episode_length', type=int, default=200)

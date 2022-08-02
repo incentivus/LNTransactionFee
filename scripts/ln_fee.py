@@ -11,7 +11,7 @@ def train(env_params, train_params, tb_log_dir, tb_name, log_dir, seed):
     model = make_agent(env, train_params['algo'], tb_log_dir)
     model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name=tb_name)
     # TODO : How to save for logging
-    model.save(log_dir+tb_log_name)
+    model.save(log_dir+tb_name)
 
 
 def main():

@@ -6,7 +6,7 @@ import numpy as np
 
 
 def train(env_params, train_params, tb_log_dir, tb_name, log_dir, seed):
-    data = load_data(env_params['node_index'], env_params['data_path'], env_params['merchants_path'])
+    data = load_data(env_params['node_index'], env_params['data_path'], env_params['merchants_path'], env_params['local_size'])
     env = make_env(data, env_params, seed)
     model = make_agent(env, train_params['algo'], tb_log_dir)
     model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name=tb_name)
@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--fee_base_upper_bound', type=int, default=10000)
     parser.add_argument('--total_timesteps', type=int, default=1000000)
     parser.add_argument('--max_episode_length', type=int, default=200)
+    parser.add_argument('--local_size', type=int, default=100)
     parser.add_argument('--counts', default=[10, 10, 10])
     parser.add_argument('--amounts', default=[10000, 50000, 100000])
     parser.add_argument('--epsilons', default=[.6, .6, .6])
@@ -41,6 +42,7 @@ def main():
                   'node_index': args.node_index,
                   'fee_base_upper_bound': args.fee_base_upper_bound,
                   'max_episode_length': args.max_episode_length,
+                  'local_size': args.local_size,
                   'counts': args.counts,
                   'amounts': args.amounts,
                   'epsilons': args.epsilons}

@@ -12,7 +12,7 @@ def select_random_node(directed_edges, conditions):
                                                                                         conditions['total_capacity_lower_bound'],
                                                                                         conditions['total_capacity_upper_bound'])
 
-    random_node_index = random.sample(channels_with_qualified_total_capacity, 1)
+    random_node_index = random.sample(channels_with_qualified_total_capacity, 15)
     return random_node_index
 
 

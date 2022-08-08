@@ -48,7 +48,7 @@ def make_env(data, env_params, seed):
     return env
 
 
-def load_data(node, directed_edges_path, providers_path):
+def load_data(node, directed_edges_path, providers_path, local_size):
     """
     :return:
     data = dict{src: node chosen for simulation  (default: int)
@@ -85,6 +85,6 @@ def load_data(node, directed_edges_path, providers_path):
                                                            directed_edges,
                                                            data['src'], data['trgs'],
                                                            data['channel_ids'],
-                                                           subgraph_radius,
-                                                           channels)
+                                                           channels,
+                                                           local_size)
     return data

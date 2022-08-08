@@ -2,6 +2,7 @@ import networkx as nx
 import pandas as pd
 import json
 import numpy as np
+import random
 
 
 def aggregate_edges(directed_edges):
@@ -19,17 +20,35 @@ def aggregate_edges(directed_edges):
     return directed_aggr_edges
 
 
+
 def get_neighbors(G, src, radius):
-    """localazing the networke around the node"""
+    """localising the network around the node"""
+
     neighbors = [src]
-    for i in range(radius):
+
+    for i in range(10):
         outer_list = []
         for neighbor in neighbors:
             inner_list = list(G.neighbors(neighbor))
-            outer_list += inner_list
-        neighbors += outer_list
-    print('local set size: ', len(set(neighbors)))
-    return set(neighbors)
+
+            for v in inner_list:
+               if len(neighbors) > 100:
+                  print('size of sub network: ', len(neighbors))        
+                  return set(neighbors)
+               if v not in neighbor:
+                  neighbors.append(v)
+
+
+       
+                  	
+	
+
+	
+
+
+
+
+
 
 
 def initiate_balances(directed_edges, approach='half'):

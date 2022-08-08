@@ -20,52 +20,27 @@ def aggregate_edges(directed_edges):
     return directed_aggr_edges
 
 
-<<<<<<< HEAD
+
 def get_neighbors(G, src, local_size):
-    """localising the network around the node"""
-
-    neighbors = [src]
-    for i in range(10):
-=======
-
-def get_neighbors(G, src, radius):
     """localising the network around the node"""
 
     neighbors = [src]
 
     for i in range(10):
         outer_list = []
->>>>>>> 2011eab2920ed42a275611a113ba6c0d0b5a93ad
         for neighbor in neighbors:
             inner_list = list(G.neighbors(neighbor))
 
             for v in inner_list:
-<<<<<<< HEAD
+
                if len(neighbors) > local_size:
                   print('size of sub network: ', len(neighbors))
-                  return set(neighbors)
-               if v not in neighbor:
-                  neighbors.append(v)
-=======
-               if len(neighbors) > 100:
-                  print('size of sub network: ', len(neighbors))        
                   return set(neighbors)
                if v not in neighbor:
                   neighbors.append(v)
 
 
        
-                  	
-	
-
-	
-
-
-
-
-
->>>>>>> 2011eab2920ed42a275611a113ba6c0d0b5a93ad
-
 
 def initiate_balances(directed_edges, approach='half'):
     '''

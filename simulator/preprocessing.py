@@ -28,7 +28,7 @@ def get_neighbors(G, src, radius):
             inner_list = list(G.neighbors(neighbor))
             outer_list += inner_list
         neighbors += outer_list
-    print('local set size: ', set(neighbors).len)
+    print('local set size: ', len(set(neighbors)))
     return set(neighbors)
 
 

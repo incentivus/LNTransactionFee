@@ -4,33 +4,33 @@ from simulator import preprocessing
 from env.multi_channel import FeeEnv
 
 
-def make_agent(env, algo, tb_log_dir):
+def make_agent(env, algo, device, tb_log_dir):
     policy = "MlpPolicy"
     # create model
     if algo == "PPO":
         from stable_baselines3 import PPO
-        model = PPO(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = PPO(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "TRPO":
         from sb3_contrib import TRPO
-        model = TRPO(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = TRPO(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "SAC":
         from stable_baselines3 import SAC
-        model = SAC(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = SAC(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "DDPG":
         from stable_baselines3 import DDPG
-        model = DDPG(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = DDPG(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "TD3":
         from stable_baselines3 import TD3
-        model = TD3(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = TD3(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "A2C":
         from stable_baselines3 import A2C
-        model = A2C(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = A2C(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "TQC":
         from sb3_contrib import TQC
-        model = TQC(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = TQC(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     elif algo == "ARS":
         from sb3_contrib import ARS
-        model = ARS(policy, env, verbose=1, tensorboard_log=tb_log_dir)
+        model = ARS(policy, env, verbose=1, device=device, tensorboard_log=tb_log_dir)
     else:
         raise NotImplementedError()
 

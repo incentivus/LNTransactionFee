@@ -8,7 +8,7 @@ import numpy as np
 def train(env_params, train_params, tb_log_dir, tb_name, log_dir, seed):
     data = load_data(env_params['node_index'], env_params['data_path'], env_params['merchants_path'], env_params['local_size'])
     env = make_env(data, env_params, seed)
-    model = make_agent(env, train_params['algo'], tb_log_dir)
+    model = make_agent(env, train_params['algo'], train_params['device'], tb_log_dir)
     model.learn(total_timesteps=train_params['total_timesteps'], tb_log_name=tb_name)
     # TODO : How to save for logging
     model.save(log_dir+tb_name)
@@ -32,11 +32,14 @@ def main():
     parser.add_argument('--counts', default=[10, 10, 10])
     parser.add_argument('--amounts', default=[10000, 50000, 100000])
     parser.add_argument('--epsilons', default=[.6, .6, .6])
+    parser.add_argument('--device', default='auto')
+
     
     args = parser.parse_args()
 
     train_params = {'algo': args.algo,
-                    'total_timesteps': args.total_timesteps}
+                    'total_timesteps': args.total_timesteps,
+                    'device': args. device}
 
     env_params = {'data_path': args.data_path,
                   'merchants_path': args.merchants_path,

@@ -34,7 +34,7 @@ def create_reward_dataframe_for_plotting(paths):
         ep_rew_mean_dataframes.append(df)
 
     # check if all the dataframes has same steps
-    assert all(x['step'].equals(ep_rew_mean_dataframes[0]['step']) for x in ep_rew_mean_dataframes)
+    # assert all(x['step'].equals(ep_rew_mean_dataframes[0]['step']) for x in ep_rew_mean_dataframes)
 
     # creating the final dataframe
     final_df = pd.DataFrame()

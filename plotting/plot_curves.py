@@ -2,26 +2,109 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from plotting.utils import create_reward_dataframe_for_plotting
 import os
+from tb_results.paths import events_dict, local_events_dict
 
-if __name__ == "__main__":
+COLORS = ['#377eb8', '#4daf4a', '#984ea3', '#a65628', '#e41a1c']
+NODE_INDEXES = ["NODE 97851", "NODE 71555", "NODE 109618"]
 
-    paths = ['results/test_1/events.out.tfevents.1659272192.mbk-64-82.mpi-sws.org.28934.0',
-             'results/test_2/events.out.tfevents.1659273371.mbk-64-82.mpi-sws.org.28934.1',
-             'results/test_3/events.out.tfevents.1659275083.mbk-64-82.mpi-sws.org.28934.2']
 
-    save_dir = 'plotting/plots_and_stats/'
-    df = create_reward_dataframe_for_plotting(paths)
-    df.to_csv(os.path.join(save_dir, 'stats.csv'))
+def generate_path(node_index, algo_name, events_list):
+    name = f"{algo_name}_{node_index}"
+    paths = []
+    for i in range(len(events_list)):
+        path = f"tb_results/{node_index}/{algo_name}/{name}_{i+1}_1/{events_list[i]}"
+        paths.append(path)
+    return name, paths
 
-    print(df)
+def generate_path_for_bigger_local_plots(node_index, algo_name, local_size, local_events_list):
+    name = f"{algo_name}_{node_index}"
+    paths = []
+    for i in range(len(local_events_list)):
+        path = f"tb_results/{node_index}/{algo_name}_local/local{local_size}/raidus_{local_size}_{i + 1}_1/{local_events_list[i]}"
+        paths.append(path)
+    return name, paths
+
+
+def multi_plot(df_list, node_index, algo_names, save_dir):
+    plt.clf()
+    plt.rc('axes', axisbelow=True)
+    for i in range(len(df_list)):
+        df = df_list[i]
+        steps = df['step']
+        mean = df['mean']
+        std = df['std']
+        plt.plot(steps, mean, color=COLORS[i], label=algo_names[i])
+        plt.fill_between(steps, mean - std, mean + std, alpha=0.3, color=COLORS[i])
+
+    plt.legend()
+    plt.xlabel('step')
+    plt.ylabel('ep_rew_mean')
+    plt.title(f'NODE {node_index}')
+    plt.savefig(os.path.join(save_dir + '/plots', f'{node_index}_reward_plot.png'))
+
+
+def single_plot(df, name, save_dir):
+    plt.clf()
+    plt.rc('axes', axisbelow=True)
     steps = df['step']
     mean = df['mean']
     std = df['std']
+    plt.plot(steps, mean)
+    plt.fill_between(steps, mean - std, mean + std, alpha=0.2)
 
-    plt.plot(steps, mean, 'b-', label='reward')
-    plt.fill_between(steps, mean - std, mean + std, color='b', alpha=0.2)
     plt.xlabel('step')
     plt.ylabel('ep_rew_mean')
-    plt.title('reward plot')
-    plt.savefig(os.path.join(save_dir, 'reward_plot.png'))
+    plt.title(f'{name} reward plot')
+    plt.savefig(os.path.join(save_dir + '/plots', f'{name}_reward_plot.png'))
+
+
+def main(node_index):
+    save_dir = f'plots_and_stats/{node_index}'
+    algo_names = ['A2C', 'DDPG', 'PPO', 'TD3', 'TRPO']
+
+    df_list = []
+    for i, algo_name in enumerate(algo_names):
+        name, paths = generate_path(node_index, algo_name, events_dict[node_index][algo_name])
+        df = create_reward_dataframe_for_plotting(paths)
+        single_plot(df, name, save_dir)
+        df_list.append(df)
+        df.to_csv(os.path.join(save_dir + '/stats', f'stats_{name}.csv'))  # save as csv
+
+    multi_plot(df_list, node_index, algo_names, save_dir)
+
+
+def multi_plot_local(df_list, node_index, local_sizes, save_dir):
+    plt.clf()
+    plt.rc('axes', axisbelow=True)
+    for i in range(len(df_list)):
+        df = df_list[i][0:245]
+        steps = df['step']
+        mean = df['mean']
+        std = df['std']
+        plt.plot(steps, mean, color=COLORS[i], label=local_sizes[i])
+        plt.fill_between(steps, mean - std, mean + std, alpha=0.3, color=COLORS[i])
+
+    plt.legend()
+    plt.xlabel('step')
+    plt.ylabel('ep_rew_mean')
+    plt.title(f'NODE {node_index}')
+    plt.savefig(os.path.join(save_dir + '/plots', f'{node_index}_local_size_reward_plot.png'))
+
+def main_local(node_index):
+    save_dir = f'plots_and_stats/{node_index}'
+    local_sizes = [100, 250, 500]
+    algo_name = 'PPO'
+
+    df_list = []
+    for i, local_size in enumerate(local_sizes):
+        name, paths = generate_path_for_bigger_local_plots(node_index, algo_name, local_size, local_events_dict[node_index][local_size])
+        df = create_reward_dataframe_for_plotting(paths)
+        df_list.append(df)
+
+    multi_plot_local(df_list, node_index, local_sizes, save_dir)
+
+
+if __name__ == "__main__":
+    node_index = 97851
+    main_local(node_index)
 

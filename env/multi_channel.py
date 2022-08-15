@@ -99,14 +99,14 @@ class FeeEnv(gym.Env):
         return [seed]
 
 
-    def step(self, action):
+    def step(self, action, rescale=True):
         # Rescaling the action vector
-        action[0:self.n_channel] = .5 * self.fee_rate_upper_bound * action[0:self.n_channel] + \
-                                   .5 * self.fee_rate_upper_bound
-        action[self.n_channel:2 * self.n_channel] = .5 * self.fee_base_upper_bound * action[
-                                                                                     self.n_channel:2 * self.n_channel] + \
-                                                    .5 * self.fee_base_upper_bound
-
+        if rescale:
+            action[0:self.n_channel] = .5 * self.fee_rate_upper_bound * action[0:self.n_channel] + \
+                                       .5 * self.fee_rate_upper_bound
+            action[self.n_channel:2 * self.n_channel] = .5 * self.fee_base_upper_bound * action[
+                                                                                         self.n_channel:2 * self.n_channel] + \
+                                                        .5 * self.fee_base_upper_bound
 
         # Running simulator for a certain time interval
         balances, transaction_amounts, transaction_numbers = self.simulate_transactions(action)

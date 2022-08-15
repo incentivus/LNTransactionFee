@@ -107,10 +107,11 @@ def create_active_channels(network_dictionary, channels):
     return active_channels
 
 
-def create_sub_network(directed_edges, providers, src, trgs, channel_ids, local_size):
+def create_sub_network(directed_edges, providers, src, trgs, channel_ids, local_size, manual_balance=False, initial_balances = [], capacities=[]):
     """creating network_dictionary, edges and providers for the local subgraph."""
     edges = initiate_balances(directed_edges)
-    # edges = set_channels_balances(edges, src, trgs, channel_ids, capacities, initial_balances)
+    if manual_balance:
+        edges = set_channels_balances(edges, src, trgs, channel_ids, capacities, initial_balances)
     G = nx.from_pandas_edgelist(edges, source="src", target="trg",
                                 edge_attr=['channel_id', 'capacity', 'fee_base_msat', 'fee_rate_milli_msat', 'balance'],
                                 create_using=nx.DiGraph())
@@ -163,9 +164,9 @@ def select_node(directed_edges, src_index):
     return src, list(trgs), list(channel_ids), number_of_channels
 
 
-def get_init_parameters(providers, directed_edges, src, trgs, channel_ids, channels, local_size):
+def get_init_parameters(providers, directed_edges, src, trgs, channel_ids, channels, local_size, manual_balance, initial_balances, capacities):
     network_dictionary, nodes, sub_providers, sub_edges = create_sub_network(directed_edges, providers, src, trgs,
-                                                                             channel_ids, local_size)
+                                                                             channel_ids, local_size, manual_balance, initial_balances, capacities)
     active_channels = create_active_channels(network_dictionary, channels)
     try:
         node_variables, active_providers, active_ratio = init_node_params(sub_edges, sub_providers, verbose=True)

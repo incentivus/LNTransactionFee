@@ -1,3 +1,4 @@
+import numpy as np
 import stable_baselines3
 import sb3_contrib
 from simulator import preprocessing
@@ -48,7 +49,7 @@ def make_env(data, env_params, seed):
     return env
 
 
-def load_data(node, directed_edges_path, providers_path, local_size):
+def load_data(node, directed_edges_path, providers_path, local_size, manual_balance, initial_balances, capacities):
     """
     :return:
     data = dict{src: node chosen for simulation  (default: int)
@@ -72,7 +73,6 @@ def load_data(node, directed_edges_path, providers_path, local_size):
     data['src'], data['trgs'], data['channel_ids'], n_channels = preprocessing.select_node(directed_edges, src_index)
     data['capacities'] = [153243, 8500000, 4101029, 5900000, 2500000, 7000000]
     data['initial_balances'] = [153243 / 2, 8500000 / 2, 4101029 / 2, 5900000 / 2, 2500000 / 2, 7000000 / 2]
-    # data['initial_balances'] = [153243, 0, 0, 0, 0, 0]
     channels = []
     for trg in data['trgs']:
         channels.append((data['src'], trg))
@@ -86,5 +86,135 @@ def load_data(node, directed_edges_path, providers_path, local_size):
                                                            data['src'], data['trgs'],
                                                            data['channel_ids'],
                                                            channels,
-                                                           local_size)
+                                                           local_size,
+                                                           manual_balance, initial_balances, capacities)
     return data
+
+
+
+def get_static_fee(directed_edges, node_index):
+    action = get_original_fee(directed_edges, node_index)
+    return action
+
+def get_proportional_fee(state, number_of_channels, directed_edges, node_index):
+    balances = state[0:number_of_channels]
+    capacities = get_capacities(directed_edges, node_index)
+    fee_rates = []
+    for i in range(len(balances)):
+        b = balances[i]
+        c = capacities[i]
+        f = -1 + 2*(1-(b/c))
+        fee_rates.append(f)
+    base_fees = [-1]*number_of_channels     # = zero after rescaling
+    return fee_rates+base_fees
+
+def get_match_peer_fee(directed_edges, node_index):
+    action = get_peer_fee(directed_edges, node_index)
+    return action
+
+
+def get_fee_based_on_strategy(state, strategy, directed_edges, node_index):
+    number_of_channels = get_number_of_channels(directed_edges,node_index)
+    rescale = True
+    if strategy == 'static':
+        action = get_static_fee(directed_edges, node_index)
+        rescale = False
+    elif strategy == 'proportional':
+        action = get_proportional_fee(state, number_of_channels, directed_edges, node_index)
+        action = np.array(action)
+        rescale = True
+    elif strategy == 'match_peer':
+        action = get_match_peer_fee(directed_edges, node_index)
+        rescale = False
+    else:
+        raise NotImplementedError
+    return action, rescale
+
+
+def get_original_fee(directed_edges, node_index):
+    src = directed_edges.loc[node_index]['src']
+    fee_rates = list(directed_edges[directed_edges['src'] == src]['fee_rate_milli_msat'])
+    base_fees = list(directed_edges[directed_edges['src'] == src]['fee_base_msat'])
+    return fee_rates + base_fees
+
+def get_peer_fee(directed_edges, node_index):
+    src = directed_edges.loc[node_index]['src']
+    fee_rates = list(directed_edges[directed_edges['trg'] == src]['fee_rate_milli_msat'])
+    base_fees = list(directed_edges[directed_edges['trg'] == src]['fee_base_msat'])
+    return fee_rates + base_fees
+
+def get_capacities(directed_edges, node_index):
+    src = directed_edges.loc[node_index]['src']
+    capacities = list(directed_edges[directed_edges['src'] == src]['capacity'])
+    return capacities
+
+def get_number_of_channels(directed_edges, node_index):
+    src = directed_edges.loc[node_index]['src']
+    number_of_channels = len(directed_edges[directed_edges['src'] == src])
+    return number_of_channels
+
+
+def get_discounted_reward(rewards, gamma):
+    discounted_reward = 0
+    for i in range(len(rewards)):
+        coeff = pow(gamma, i)
+        r = coeff*rewards[i]
+        discounted_reward += r
+    return discounted_reward
+
+
+def load_model(algo, env_params):
+    node_index = env_params['node_index']
+    if algo == 'DDPG':
+        from stable_baselines3 import DDPG
+        if node_index == 97851:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/DDPG/DDPG_1_97851'
+        elif node_index == 109618:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/DDPG/DDPG_109681_1'
+        elif node_index == 71555:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/DDPG/DDPG_71555_2'
+        model = DDPG.load(path=path)
+    elif algo == 'PPO':
+        from stable_baselines3 import PPO
+        if node_index == 97851:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/PPO/PPO_1'
+        elif node_index == 109618:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/PPO/PPO_109681_1'
+        elif node_index == 71555:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/PPO/PPO_71555_1'
+        model = PPO.load(path=path)
+    elif algo == 'TRPO':
+        from sb3_contrib import TRPO
+        if node_index == 97851:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/TRPO/TRPO_1'
+        elif node_index == 109618:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/TRPO/TRPO_109681_1'
+        elif node_index == 71555:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/TRPO/TRPO_71555_1'
+        model = TRPO.load(path=path)
+    elif algo == 'TD3':
+        from stable_baselines3 import TD3
+        if node_index == 97851:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/TD3/TD3_4'
+        elif node_index == 109618:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/TD3/TD3_109681_1'
+        elif node_index == 71555:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/TD3/TD3_71555_4'
+        model = TD3.load(path=path)
+    elif algo == 'A2C':
+        from stable_baselines3 import A2C
+        if node_index == 97851:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/A2C/A2C_97851_1'
+        elif node_index == 109618:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/A2C/A2C_1_109618'
+        elif node_index == 71555:
+            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/A2C/A2C_71555_1'
+        model = A2C.load(path=path)
+
+    else:
+        raise NotImplementedError
+
+    return model
+
+
+

@@ -92,8 +92,10 @@ def load_data(node, directed_edges_path, providers_path, local_size, manual_bala
 
 
 
-def get_static_fee(directed_edges, node_index):
-    action = get_original_fee(directed_edges, node_index)
+def get_static_fee(directed_edges, node_index, number_of_channels):
+    # action = get_original_fee(directed_edges, node_index)
+    # action = get_mean_fee(directed_edges, number_of_channels)
+    action = get_constant_fee(alpha=541.62316304877, beta=1760.82436708861, number_of_channels=number_of_channels)
     return action
 
 def get_proportional_fee(state, number_of_channels, directed_edges, node_index):
@@ -114,10 +116,10 @@ def get_match_peer_fee(directed_edges, node_index):
 
 
 def get_fee_based_on_strategy(state, strategy, directed_edges, node_index):
-    number_of_channels = get_number_of_channels(directed_edges,node_index)
+    number_of_channels = get_number_of_channels(directed_edges, node_index)
     rescale = True
     if strategy == 'static':
-        action = get_static_fee(directed_edges, node_index)
+        action = get_static_fee(directed_edges, node_index, number_of_channels)
         rescale = False
     elif strategy == 'proportional':
         action = get_proportional_fee(state, number_of_channels, directed_edges, node_index)
@@ -130,6 +132,14 @@ def get_fee_based_on_strategy(state, strategy, directed_edges, node_index):
         raise NotImplementedError
     return action, rescale
 
+
+def get_mean_fee(directed_edges, number_of_channels):
+    mean_alpha = directed_edges['fee_rate_milli_msat'].mean()
+    mean_beta = directed_edges['fee_base_msat'].mean()
+    return [mean_alpha]*number_of_channels + [mean_beta]*number_of_channels
+
+def get_constant_fee(alpha, beta, number_of_channels):
+    return [alpha]*number_of_channels + [beta]*number_of_channels
 
 def get_original_fee(directed_edges, node_index):
     src = directed_edges.loc[node_index]['src']
@@ -218,3 +228,16 @@ def load_model(algo, env_params):
 
 
 
+def load_localized_model(radius):
+    from stable_baselines3 import PPO
+    if radius == 100:
+        path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/localization_results/100/PPO_1'
+    elif radius == 250:
+        path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/localization_results/250/raidus_250_1'
+    elif radius == 500:
+        path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/localization_results/500/raidus_500_1'
+    else:
+        raise NotImplementedError
+
+    model = PPO.load(path=path)
+    return model

@@ -1,20 +1,17 @@
 import numpy as np
 from env.multi_channel import FeeEnv
 from simulator import preprocessing
-from utils import load_data, make_env, get_fee_based_on_strategy, get_discounted_reward
+from utils import load_data, make_env, get_discounted_reward, load_localized_model
 
 
-
-def evaluate(strategy, env, env_params, gamma):
-    directed_edges = preprocessing.get_directed_edges(env_params['data_path'])
-    node_index = env_params['node_index']
+def evaluate(model, env, gamma):
     done = False
     state = env.reset()
     rewards = []
     while not done:
-        action, rescale = get_fee_based_on_strategy(state, strategy, directed_edges, node_index)
-        state, reward, done, info = env.step(action, rescale)
-        state = state*1000
+        action, _state = model.predict(state)
+        action = np.array(action)
+        state, reward, done, info = env.step(action)
         rewards.append(reward)
         print(reward)
 
@@ -27,22 +24,24 @@ def evaluate(strategy, env, env_params, gamma):
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Baselines')
-    parser.add_argument('--strategy', choices=['static', 'proportional', 'match_peer'], default='static', required=False)
+    parser = argparse.ArgumentParser(description='Localization')
+    parser.add_argument('--log_dir', default='')
     parser.add_argument('--data_path', default='../data/data.json')
     parser.add_argument('--merchants_path', default='../data/merchants.json')
     parser.add_argument('--fee_base_upper_bound', type=int, default=10000)
     parser.add_argument('--max_episode_length', type=int, default=200)
-    parser.add_argument('--n_seed', type=int, default=1)  # 5
+    parser.add_argument('--n_seed', type=int, default=5)  # 5
     parser.add_argument('--local_size', type=int, default=100)
-    parser.add_argument('--node_index', type=int, default=71555)  # 97851
+    parser.add_argument('--local_size_option', choices=[100, 250, 500], default=500)
+    parser.add_argument('--node_index', type=int, default=97851)  # 97851
     parser.add_argument('--counts', default=[10, 10, 10], type=lambda s: [int(item) for item in s.split(',')])
     parser.add_argument('--amounts', default=[10000, 50000, 100000],
                         type=lambda s: [int(item) for item in s.split(',')])
     parser.add_argument('--epsilons', default=[.6, .6, .6], type=lambda s: [int(item) for item in s.split(',')])
-    parser.add_argument('--manual_balance', default=True)
-    parser.add_argument('--initial_balances', default= [214642, 589538, 9179347, 428493, 693709, 932820], type=lambda s: [int(item) for item in s.split(',')])
-    parser.add_argument('--capacities', default= [221435, 1000000, 16777215, 1500000, 1000000, 1000000], type=lambda s: [int(item) for item in s.split(',')])
+    parser.add_argument('--manual_balance', default=False)
+    parser.add_argument('--initial_balances', default=[],
+                        type=lambda s: [int(item) for item in s.split(',')])
+    parser.add_argument('--capacities', default=[], type=lambda s: [int(item) for item in s.split(',')])
 
     args = parser.parse_args()
 
@@ -60,25 +59,31 @@ if __name__ == '__main__':
                   'initial_balances': args.initial_balances,
                   'capacities': args.capacities}
 
-    strategies = ['static', 'proportional', 'match_peer']
-    strategy_reward_dict = dict()
-    for strategy in strategies:
-        strategy_reward_dict[strategy] = []
+
+
+    #local_size_option = args.local_size_option
+    radius_options = [100, 250, 500]
+    reward_dict = dict()
+    for radius in radius_options:
+        reward_dict[radius] = []
 
     for s in range(args.n_seed):
         seed = np.random.randint(low=0, high=1000000)
         data = load_data(env_params['node_index'], env_params['data_path'], env_params['merchants_path'], env_params['local_size'],
-                         env_params['manual_balance'], env_params['initial_balances'], env_params['capacities'])
-        for strategy in strategies:
+                         env_params['manual_balance'], [], [])
+        for radius in radius_options:
             env = make_env(data, env_params, seed)
-            discounted_reward = evaluate(strategy, env, env_params, gamma=0.99)
-            strategy_reward_dict[strategy].append(discounted_reward)
+            model = load_localized_model(radius)
+            model.set_env(env)
+
+            discounted_reward = evaluate(model, env, gamma=0.99)
+            reward_dict[radius].append(discounted_reward)
 
 
     import statistics
-    strategy_mean_reward_dict = dict()
-    for strategy in strategies:
-        strategy_mean_reward_dict[strategy] = statistics.mean(strategy_reward_dict[strategy])
+    mean_reward_dict = dict()
+    for radius in radius_options:
+        mean_reward_dict[radius] = statistics.mean(reward_dict[radius])
 
     print('_____________________________________________________')
-    print(strategy_mean_reward_dict)
+    print(mean_reward_dict)

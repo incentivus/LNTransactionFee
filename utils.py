@@ -173,52 +173,22 @@ def get_discounted_reward(rewards, gamma):
     return discounted_reward
 
 
-def load_model(algo, env_params):
+def load_model(algo, env_params, path):
     node_index = env_params['node_index']
     if algo == 'DDPG':
         from stable_baselines3 import DDPG
-        if node_index == 97851:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/DDPG/DDPG_1_97851'
-        elif node_index == 109618:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/DDPG/DDPG_109681_1'
-        elif node_index == 71555:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/DDPG/DDPG_71555_2'
         model = DDPG.load(path=path)
     elif algo == 'PPO':
         from stable_baselines3 import PPO
-        if node_index == 97851:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/PPO/PPO_1'
-        elif node_index == 109618:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/PPO/PPO_109681_1'
-        elif node_index == 71555:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/PPO/PPO_71555_1'
         model = PPO.load(path=path)
     elif algo == 'TRPO':
         from sb3_contrib import TRPO
-        if node_index == 97851:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/TRPO/TRPO_1'
-        elif node_index == 109618:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/TRPO/TRPO_109681_1'
-        elif node_index == 71555:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/TRPO/TRPO_71555_1'
         model = TRPO.load(path=path)
     elif algo == 'TD3':
         from stable_baselines3 import TD3
-        if node_index == 97851:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/TD3/TD3_4'
-        elif node_index == 109618:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/TD3/TD3_109681_1'
-        elif node_index == 71555:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/TD3/TD3_71555_4'
         model = TD3.load(path=path)
     elif algo == 'A2C':
         from stable_baselines3 import A2C
-        if node_index == 97851:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/97851/A2C/A2C_97851_1'
-        elif node_index == 109618:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/109618/A2C/A2C_1_109618'
-        elif node_index == 71555:
-            path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/tb_results/71555/A2C/A2C_71555_1'
         model = A2C.load(path=path)
 
     else:
@@ -228,16 +198,7 @@ def load_model(algo, env_params):
 
 
 
-def load_localized_model(radius):
+def load_localized_model(radius, path):
     from stable_baselines3 import PPO
-    if radius == 100:
-        path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/localization_results/100/PPO_1'
-    elif radius == 250:
-        path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/localization_results/250/raidus_250_1'
-    elif radius == 500:
-        path = '/Users/aida/PycharmProjects/LNTransactionFee/plotting/localization_results/500/raidus_500_1'
-    else:
-        raise NotImplementedError
-
     model = PPO.load(path=path)
     return model
